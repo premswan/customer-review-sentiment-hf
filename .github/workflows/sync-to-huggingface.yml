@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   sync-to-huggingface:
@@ -13,11 +14,16 @@ jobs:
       - name: Checkout GitHub repository
         uses: actions/checkout@v6
 
-      - name: Sync repository to Hugging Face Space
-        uses: huggingface/hub-sync@v0.1.0
-        with:
-          github_repo_id: ${{ github.repository }}
-          huggingface_repo_id: premswan/customer-review-sentiment-analyzer
-          hf_token: ${{ secrets.HF_TOKEN }}
-          repo_type: space
-          space_sdk: streamlit
+      - name: Install Hugging Face CLI
+        run: pip install -U "huggingface_hub[cli]"
+
+      - name: Upload files to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          hf upload premswan/customer-review-sentiment-analyzer . . \
+            --repo-type space \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --delete "*" \
+            --commit-message "Sync from GitHub"
